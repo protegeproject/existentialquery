@@ -46,7 +46,7 @@ public class OWLExistentialReasonerImpl implements OWLExistentialReasoner {
         return new OWLClassNodeSet(result);
     }
 
-    private void computeExistentialFillers(OWLClassExpression ce, List<OWLObjectPropertyExpression> properties, OWLClass curFiller, Set<Node<OWLClass>> result) {
+    private void computeExistentialFillers(final OWLClassExpression ce, final List<OWLObjectPropertyExpression> properties, final OWLClass curFiller, final Set<Node<OWLClass>> result) {
         OWLDataFactory df = ontology.getOWLOntologyManager().getOWLDataFactory();
         OWLClassExpression chain = null;
         OWLClassExpression filler = curFiller;
