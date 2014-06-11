@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+
+<plugin>
+
+    <extension id="existentialqueryviewcomponent"
+     		   point="org.protege.editor.core.application.ViewComponent">
+        <label value="Existential Query"/>
+        <class value="uk.ac.manchester.cs.owl.existentialquery.ExistentialQueryViewComponent"/>
+        <headerColor value="@org.protege.classcolor"/>
+        <category value="@org.protege.querycategory"/>
+    </extension>
+
+</plugin>
