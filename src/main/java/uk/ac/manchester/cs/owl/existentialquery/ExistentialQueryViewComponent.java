@@ -128,12 +128,9 @@ public class ExistentialQueryViewComponent extends AbstractActiveOntologyViewCom
             JOptionPane.showMessageDialog(this, "Please select Start Reasoner from the Reasoner menu", "Reasoner not started", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        OWLOntology ont = getOWLModelManager().getActiveOntology();
-
         OWLReasoner owlReasoner = owlReasonerManager.getCurrentReasoner();
         final FillerTreatment fillerTreatment = fillerTreatmentCheckbox.isSelected() ? FillerTreatment.MOST_SPECIFIC : FillerTreatment.ALL;
-        OWLExistentialReasonerImpl reasoner = new OWLExistentialReasonerImpl(ont, owlReasoner, fillerTreatment);
+        OWLExistentialReasonerImpl reasoner = new OWLExistentialReasonerImpl(owlReasoner, fillerTreatment);
         NodeSet<OWLClass> clses = reasoner.getFillers(ce, props);
         resultsList.setListData(clses.getFlattened().toArray());
 
