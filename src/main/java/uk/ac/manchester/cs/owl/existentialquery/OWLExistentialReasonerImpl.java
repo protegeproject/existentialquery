@@ -16,6 +16,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Bio-Health Informatics Group<br>
  * Date: 14-Apr-2010
  */
+
 /**
  * Author: Matthew Horridge<br>
  * The University of Manchester<br>
@@ -28,11 +29,14 @@ public class OWLExistentialReasonerImpl implements OWLExistentialReasoner {
 
     private FillerTreatment fillerTreatment = FillerTreatment.MOST_SPECIFIC;
 
+    private int entailmentCheckCount = 0;
+
     /**
      * Constructs an existential reasoner.
-     * @param reasoner The delegate reasoner.  Not {@code null}.
+     *
+     * @param reasoner        The delegate reasoner.  Not {@code null}.
      * @param fillerTreatment The {@link FillerTreatment}. Not {@code null}.
-     * @throws  NullPointerException if any parameters are {@code null}.
+     * @throws NullPointerException if any parameters are {@code null}.
      */
     public OWLExistentialReasonerImpl(OWLReasoner reasoner, FillerTreatment fillerTreatment) {
         this.reasoner = checkNotNull(reasoner);
@@ -43,14 +47,13 @@ public class OWLExistentialReasonerImpl implements OWLExistentialReasoner {
      * Gets the fillers of the existential restrictions that are entailed to be superclasses the specified class
      * expression and act along the specified property.  In essence, this finds bindings for ?x with respect to
      * the following template: <code>SubClassOf(ce ObjectSomeValuesFrom(property, ?x))</code>
-     * @param ce The class expression.  Not {@code null}.
+     *
+     * @param ce       The class expression.  Not {@code null}.
      * @param property The property expression.  Not {@code null}.
      * @return A set of class expressions that are the entailed fillers of entailed existential restriction superclasses.
      */
     public NodeSet<OWLClass> getFillers(OWLClassExpression ce, OWLObjectPropertyExpression property) {
-        Set<Node<OWLClass>> result = new HashSet<Node<OWLClass>>();
-        computeExistentialFillers(ce, Arrays.asList(property), getDataFactory().getOWLThing(), result);
-        return new OWLClassNodeSet(result);
+        return getFillers(ce, Arrays.asList(property));
     }
 
     /**
@@ -58,47 +61,65 @@ public class OWLExistentialReasonerImpl implements OWLExistentialReasoner {
      * expression and act along the specified property chain.  In essence, this finds bindings for ?x with respect to
      * the following template: <code>SubClassOf(ce ObjectSomeValuesFrom(p1, (ObjectSomeValuesFrom(p2 ?x)))</code> for
      * arbitrary chains of properties.
-     * @param ce The class expression.  Not {@code null}.
+     *
+     * @param ce           The class expression.  Not {@code null}.
      * @param propertyList A list of property expressions that constitute a property chain.
      * @return A set of class expressions that are the entailed fillers of entailed existential restriction superclasses.
      */
     public NodeSet<OWLClass> getFillers(OWLClassExpression ce, List<OWLObjectPropertyExpression> propertyList) {
         Set<Node<OWLClass>> result = new HashSet<Node<OWLClass>>();
-        computeExistentialFillers(ce, propertyList, getDataFactory().getOWLThing(), result);
-        return new OWLClassNodeSet(result);
+        entailmentCheckCount = 0;
+        computeExistentialFillers(ce, propertyList, getDataFactory().getOWLThing(), result, new HashSet<OWLClass>());
+        NodeSet<OWLClass> nodeSetResult = new OWLClassNodeSet(result);
+        if (fillerTreatment == FillerTreatment.ALL) {
+            return nodeSetResult;
+        }
+        Set<Node<OWLClass>> removed = new HashSet<Node<OWLClass>>();
+        Set<Node<OWLClass>> finalResult = new HashSet<Node<OWLClass>>(nodeSetResult.getNodes());
+        for (Node<OWLClass> resultCls : result) {
+            OWLClass resultClsRep = resultCls.getRepresentativeElement();
+            if (!removed.contains(resultCls)) {
+                removed.add(resultCls);
+                NodeSet<OWLClass> supers = reasoner.getSuperClasses(resultClsRep, false);
+                removed.addAll(supers.getNodes());
+                finalResult.removeAll(supers.getNodes());
+            }
+        }
+        System.out.printf("For %s and %s, there were %d entailment checks.\n", ce, propertyList, entailmentCheckCount);
+        return new OWLClassNodeSet(finalResult);
+
     }
 
-    private void computeExistentialFillers(final OWLClassExpression ce, final List<OWLObjectPropertyExpression> properties, final OWLClass curFiller, final Set<Node<OWLClass>> result) {
-        if(properties.isEmpty()) {
+    private void computeExistentialFillers(final OWLClassExpression ce, final List<OWLObjectPropertyExpression> properties, final OWLClass curFiller, final Set<Node<OWLClass>> result, Set<OWLClass> visited) {
+        if (properties.isEmpty()) {
             throw new IllegalArgumentException("properties must not be empty");
         }
+        if (visited.contains(curFiller)) {
+            return;
+        }
+        visited.add(curFiller);
         final OWLDataFactory df = getDataFactory();
         OWLClassExpression chain = null;
         OWLClassExpression filler = curFiller;
-        for(int i = properties.size() - 1; i > -1; i--) {
+        for (int i = properties.size() - 1; i > -1; i--) {
             OWLObjectPropertyExpression prop = properties.get(i);
             chain = filler = df.getOWLObjectSomeValuesFrom(prop, filler);
         }
-        final OWLClassExpression testCls = df.getOWLObjectIntersectionOf(ce, chain.getObjectComplementOf());
-        if(!reasoner.isSatisfiable(testCls)) {
-            // Remove any supers
-            if (fillerTreatment.equals(FillerTreatment.MOST_SPECIFIC)) {
-                for(Node<OWLClass> resultCls : new ArrayList<Node<OWLClass>>(result)) {
-                        OWLClass resultClsRep = resultCls.iterator().next();
-                        OWLSubClassOfAxiom ax = df.getOWLSubClassOfAxiom(curFiller, resultClsRep);
-                        if(reasoner.isEntailed(ax)) {
-                            result.remove(resultCls);
-                        }
-                }
-            }
+        if (isEntailed(ce, chain)) {
             // More specific
             Node<OWLClass> equivalentClasses = reasoner.getEquivalentClasses(curFiller);
             result.add(equivalentClasses);
-            for(Node<OWLClass> sub : reasoner.getSubClasses(curFiller, true)) {
+            for (Node<OWLClass> sub : reasoner.getSubClasses(curFiller, true)) {
                 OWLClass representative = sub.getRepresentativeElement();
-                computeExistentialFillers(ce, properties, representative, result);
+                computeExistentialFillers(ce, properties, representative, result, visited);
             }
         }
+    }
+
+    private boolean isEntailed(OWLClassExpression ce, OWLClassExpression chain) {
+        entailmentCheckCount++;
+        OWLSubClassOfAxiom ax = getDataFactory().getOWLSubClassOfAxiom(ce, chain);
+        return reasoner.isEntailed(ax);
     }
 
 
