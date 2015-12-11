@@ -1,6 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
+
 	<groupId>edu.stanford.protege</groupId>
 	<artifactId>existentialquery</artifactId>
 	<version>2.0.0-SNAPSHOT</version>
@@ -67,19 +73,7 @@
 		<system>GitHub</system>
 		<url>https://github.com/protegeproject/existentialquery/issues</url>
 	</issueManagement>
-
-	<!-- DL Query binary is hosted on Sonatype OSSRH (OSS Repository Hosting Service). -->
-	<distributionManagement>
-		<snapshotRepository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository>
-	</distributionManagement>
-
+	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<protege.version>5.0.0-beta-19</protege.version>
