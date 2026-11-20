@@ -8,7 +8,7 @@ import org.semanticweb.owlapi.reasoner.impl.OWLClassNodeSet;
 
 import java.util.*;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Author: Matthew Horridge<br>
@@ -39,8 +39,8 @@ public class OWLExistentialReasonerImpl implements OWLExistentialReasoner {
      * @throws NullPointerException if any parameters are {@code null}.
      */
     public OWLExistentialReasonerImpl(OWLReasoner reasoner, FillerTreatment fillerTreatment) {
-        this.reasoner = checkNotNull(reasoner);
-        this.fillerTreatment = checkNotNull(fillerTreatment);
+        this.reasoner = requireNonNull(reasoner);
+        this.fillerTreatment = requireNonNull(fillerTreatment);
     }
 
     /**
