@@ -32,5 +32,7 @@ to the Protégé 6 plugin registry.
 To publish a release, set the POM version to the release version and push a tag
 that exactly matches it, such as `3.0.0`. The publishing workflow tests, signs,
 and publishes the artifacts through the Maven Central Portal. Manual workflow
-runs are reserved for snapshot versions. Publishing uses the organization's
-existing GPG and Maven Central secrets.
+runs without a release tag are reserved for snapshot versions. To retry a
+failed publication, select the existing release tag in the manual workflow's
+`release_tag` input. Publishing uses the organization's existing GPG and Maven
+Central secrets.
