@@ -11,7 +11,7 @@ to check named and anonymous subclass expressions, equivalent fillers,
 most-specific filler filtering, property chains, and updated results after
 ontology changes and reasoner synchronization.
 
-To test in Protégé 6, copy `target/existentialquery-3.0.0-SNAPSHOT.jar` into the
+To test in Protégé 6, copy `target/existentialquery-3.0.0.jar` into the
 application's `plugins` directory and restart. Add the **Existential Query**
 view from **Window → Views → Query views**, select HermiT, and start the reasoner.
 Enter a subclass expression and one object property, or a comma-separated chain
@@ -26,5 +26,11 @@ synchronize the reasoner and execute again to check the updated results.
 
 Release and distribution integration are tracked in
 [Protégé issue #1362](https://github.com/protegeproject/protege/issues/1362).
-The snapshot must be released, bundled, and verified interactively before its
-release is added to the Protégé 6 plugin registry.
+Only released versions that have been verified interactively should be added
+to the Protégé 6 plugin registry.
+
+To publish a release, set the POM version to the release version and push a tag
+that exactly matches it, such as `3.0.0`. The publishing workflow tests, signs,
+and publishes the artifacts through the Maven Central Portal. Manual workflow
+runs are reserved for snapshot versions. Publishing uses the organization's
+existing GPG and Maven Central secrets.
